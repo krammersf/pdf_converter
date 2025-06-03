@@ -32,7 +32,7 @@ function autenticarEConverter() {
             msgDiv.style.color = 'green';
             converterPDFparaBase64();
           }).catch(err => {
-            msgDiv.textContent = '❌ Erro ao autenticar. Veja a configuração dua GoogleSheet.';
+            msgDiv.textContent = '❌ Erro ao autenticar. Veja a configuração da sua GoogleSheet.';
             msgDiv.style.color = 'red';
             console.error('Erro na autenticação:', err);
           });
@@ -43,7 +43,7 @@ function autenticarEConverter() {
           converterPDFparaBase64();
         }
       }).catch(err => {
-        msgDiv.textContent = '❌ Erro ao inicializar a API. Veja o console.';
+        msgDiv.textContent = '❌ Erro ao inicializar a API. Veja a configuração da sua GoogleSheet';
         msgDiv.style.color = 'red';
         console.error('Erro na inicialização da API:', err);
       });
@@ -117,7 +117,7 @@ function enviarBlocosParaSheets(blocos) {
     msgDiv.style.color = 'green';
     console.log('Resposta do Sheets:', response);
   }).catch(err => {
-    msgDiv.textContent = '❌ Erro ao enviar para o Google Sheets. Veja o console.';
+    msgDiv.textContent = '❌ Erro ao enviar para o Google Sheets. Veja a configuração da sua GoogleSheet.';
     msgDiv.style.color = 'red';
     console.error('Erro no envio para Sheets:', err);
   });
