@@ -32,7 +32,7 @@ function autenticarEConverter() {
             msgDiv.style.color = 'green';
             converterPDFparaBase64();
           }).catch(err => {
-            msgDiv.textContent = '❌ Erro ao autenticar. Veja o console.';
+            msgDiv.textContent = '❌ Erro ao autenticar. Veja a configuração dua GoogleSheet.';
             msgDiv.style.color = 'red';
             console.error('Erro na autenticação:', err);
           });
