@@ -15,12 +15,24 @@ function initClient() {
     scope: SCOPES,
     discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
   }).then(() => {
-    // Verifica se está autenticado
-    if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-      gapi.auth2.getAuthInstance().signIn();
+    const authInstance = gapi.auth2.getAuthInstance();
+
+    if (!authInstance.isSignedIn.get()) {
+      authInstance.signIn().then(() => {
+        console.log('Usuário autenticado');
+      }).catch(err => {
+        alert('Autenticação cancelada ou falhou. Não será possível enviar para Sheets.');
+        console.error(err);
+      });
+    } else {
+      console.log('Usuário já autenticado');
     }
+  }).catch(err => {
+    alert('Erro ao inicializar API do Google.');
+    console.error(err);
   });
 }
+
 
 // Função para enviar blocos para a planilha (cada bloco numa linha)
 function enviarBlocosParaSheets(blocos) {
@@ -43,4 +55,5 @@ function enviarBlocosParaSheets(blocos) {
     console.error(error);
     alert('Erro ao enviar para Google Sheets');
   });
+  
 }
