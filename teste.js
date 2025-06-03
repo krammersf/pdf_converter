@@ -1,10 +1,9 @@
 // Configurações da API Google
-const CLIENT_ID = 'SEU_CLIENT_ID.apps.googleusercontent.com';
-const API_KEY = 'SUA_API_KEY';
+const CLIENT_ID = 'SEU_CLIENT_ID.apps.googleusercontent.com'; // substitua pelo seu
+const API_KEY = 'SUA_API_KEY'; // substitua pelo seu
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-const SPREADSHEET_ID = 'ID_DA_SUA_PLANILHA';
+const SPREADSHEET_ID = 'ID_DA_SUA_PLANILHA'; // substitua pelo seu
 
-// Inicializa a API Google
 function handleClientLoad() {
   gapi.load('client:auth2', initClient);
 }
@@ -16,25 +15,43 @@ function initClient() {
     scope: SCOPES,
     discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
   }).then(() => {
-    if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-      gapi.auth2.getAuthInstance().signIn();
+    console.log('API inicializada');
+    const authInstance = gapi.auth2.getAuthInstance();
+
+    if (!authInstance.isSignedIn.get()) {
+      authInstance.signIn().then(() => {
+        console.log('Usuário autenticado');
+        document.getElementById('mensagemEnvio').textContent = 'Usuário autenticado. Pode enviar os dados.';
+        document.getElementById('mensagemEnvio').style.color = 'green';
+      }).catch(err => {
+        console.error('Erro no login:', err);
+        document.getElementById('mensagemEnvio').textContent = 'Erro ao autenticar. Veja o console.';
+        document.getElementById('mensagemEnvio').style.color = 'red';
+      });
+    } else {
+      console.log('Usuário já autenticado');
+      document.getElementById('mensagemEnvio').textContent = 'Usuário já autenticado. Pode enviar os dados.';
+      document.getElementById('mensagemEnvio').style.color = 'green';
     }
+  }).catch(err => {
+    console.error('Erro ao inicializar API:', err);
+    document.getElementById('mensagemEnvio').textContent = 'Erro ao inicializar API. Veja o console.';
+    document.getElementById('mensagemEnvio').style.color = 'red';
   });
 }
 
-// Espera carregar o gapi e inicia client
 window.onload = () => {
   handleClientLoad();
 
   document.getElementById('btnConverter').onclick = converterPDFparaBase64;
   document.getElementById('btnLimpar').onclick = limparBlocos;
-}
+};
 
 function converterPDFparaBase64() {
   const file = document.getElementById('pdfInput').files[0];
   const msgDiv = document.getElementById('mensagemEnvio');
   msgDiv.textContent = '';
-  
+
   if (!file) {
     alert('Selecione um arquivo PDF.');
     return;
@@ -59,13 +76,12 @@ function converterPDFparaBase64() {
 
       div.innerHTML = `
         <b>Bloco ${index + 1}</b><br>
-        <textarea readonly style="width:100%; height:100px;">${bloco}</textarea><br>
+        <textarea readonly>${bloco}</textarea><br>
       `;
 
       container.appendChild(div);
     });
 
-    // Enviar blocos para Google Sheets
     enviarBlocosParaSheets(blocos);
   };
 
@@ -80,8 +96,15 @@ function limparBlocos() {
 
 function enviarBlocosParaSheets(blocos) {
   const msgDiv = document.getElementById('mensagemEnvio');
-  const values = blocos.map(bloco => [bloco]); // cada bloco numa linha, coluna A
+  const authInstance = gapi.auth2.getAuthInstance();
 
+  if (!authInstance.isSignedIn.get()) {
+    msgDiv.textContent = '❌ Usuário não autenticado. Por favor, faça login.';
+    msgDiv.style.color = 'red';
+    return;
+  }
+
+  const values = blocos.map(bloco => [bloco]);
   const body = { values };
 
   gapi.client.sheets.spreadsheets.values.append({
@@ -94,9 +117,10 @@ function enviarBlocosParaSheets(blocos) {
     const linhas = response.result.updates.updatedRows;
     msgDiv.textContent = `✅ Enviados ${linhas} blocos para o Google Sheets!`;
     msgDiv.style.color = 'green';
+    console.log('Envio concluído:', response);
   }).catch(err => {
     msgDiv.textContent = '❌ Erro ao enviar para o Google Sheets. Veja o console.';
     msgDiv.style.color = 'red';
-    console.error(err);
+    console.error('Erro no envio:', err);
   });
 }
