@@ -1,32 +1,40 @@
-// Configurações da API Google (troque pelos seus valores)
+// Configurações da API Google
 const CLIENT_ID = 'SEU_CLIENT_ID.apps.googleusercontent.com';
 const API_KEY = 'SUA_API_KEY';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 const SPREADSHEET_ID = 'ID_DA_SUA_PLANILHA';
 
+// Inicializa a API Google
 function handleClientLoad() {
   gapi.load('client:auth2', initClient);
 }
 
 function initClient() {
-  return gapi.client.init({
+  gapi.client.init({
     apiKey: API_KEY,
     clientId: CLIENT_ID,
     scope: SCOPES,
     discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
   }).then(() => {
-    const authInstance = gapi.auth2.getAuthInstance();
-    if (!authInstance.isSignedIn.get()) {
-      return authInstance.signIn();
+    if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+      gapi.auth2.getAuthInstance().signIn();
     }
-  }).catch(err => {
-    alert('Erro ao inicializar a API do Google.');
-    console.error(err);
   });
+}
+
+// Espera carregar o gapi e inicia client
+window.onload = () => {
+  handleClientLoad();
+
+  document.getElementById('btnConverter').onclick = converterPDFparaBase64;
+  document.getElementById('btnLimpar').onclick = limparBlocos;
 }
 
 function converterPDFparaBase64() {
   const file = document.getElementById('pdfInput').files[0];
+  const msgDiv = document.getElementById('mensagemEnvio');
+  msgDiv.textContent = '';
+  
   if (!file) {
     alert('Selecione um arquivo PDF.');
     return;
@@ -48,19 +56,33 @@ function converterPDFparaBase64() {
     blocos.forEach((bloco, index) => {
       const div = document.createElement('div');
       div.className = 'bloco';
-      div.innerHTML = `<b>Bloco ${index + 1}</b><br><textarea readonly>${bloco}</textarea><br>`;
+
+      div.innerHTML = `
+        <b>Bloco ${index + 1}</b><br>
+        <textarea readonly style="width:100%; height:100px;">${bloco}</textarea><br>
+      `;
+
       container.appendChild(div);
     });
 
+    // Enviar blocos para Google Sheets
     enviarBlocosParaSheets(blocos);
   };
 
   reader.readAsDataURL(file);
 }
 
+function limparBlocos() {
+  document.getElementById('blocosContainer').innerHTML = '';
+  document.getElementById('mensagemEnvio').textContent = '';
+  document.getElementById('pdfInput').value = '';
+}
+
 function enviarBlocosParaSheets(blocos) {
-  const values = blocos.map(bloco => [bloco]);
-  const body = { values: values };
+  const msgDiv = document.getElementById('mensagemEnvio');
+  const values = blocos.map(bloco => [bloco]); // cada bloco numa linha, coluna A
+
+  const body = { values };
 
   gapi.client.sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
@@ -69,20 +91,12 @@ function enviarBlocosParaSheets(blocos) {
     insertDataOption: 'INSERT_ROWS',
     resource: body,
   }).then(response => {
-    alert(`Enviados ${response.result.updates.updatedRows} blocos para o Google Sheets!`);
+    const linhas = response.result.updates.updatedRows;
+    msgDiv.textContent = `✅ Enviados ${linhas} blocos para o Google Sheets!`;
+    msgDiv.style.color = 'green';
   }).catch(err => {
-    alert('Erro ao enviar para o Google Sheets. Veja o console.');
+    msgDiv.textContent = '❌ Erro ao enviar para o Google Sheets. Veja o console.';
+    msgDiv.style.color = 'red';
     console.error(err);
   });
 }
-
-// Configura os eventos dos botões e inicia API Google
-window.onload = () => {
-  handleClientLoad();
-
-  document.getElementById('btnConverter').onclick = converterPDFparaBase64;
-  document.getElementById('btnLimpar').onclick = () => {
-    document.getElementById('blocosContainer').innerHTML = '';
-    document.getElementById('pdfInput').value = '';
-  };
-};
