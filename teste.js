@@ -4,18 +4,11 @@ const API_KEY = 'SUA_API_KEY';                                  // substitua pel
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 const SPREADSHEET_ID = 'ID_DA_SUA_PLANILHA';                    // substitua pelo seu
 
+let isAuthenticated = false;
+
 window.onload = () => {
-  gapi.load('client:auth2', () => {
-    gapi.client.init({
-      apiKey: API_KEY,
-      clientId: CLIENT_ID,
-      scope: SCOPES,
-      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-    }).then(() => {
-      document.getElementById('btnConverter').onclick = autenticarEConverter;
-      document.getElementById('btnLimpar').onclick = limparBlocos;
-    });
-  });
+  document.getElementById('btnConverter').onclick = autenticarEConverter;
+  document.getElementById('btnLimpar').onclick = limparBlocos;
 };
 
 function autenticarEConverter() {
@@ -23,21 +16,39 @@ function autenticarEConverter() {
   msgDiv.textContent = '🔐 Verificando autenticação...';
   msgDiv.style.color = 'black';
 
-  const authInstance = gapi.auth2.getAuthInstance();
-
-  if (!authInstance.isSignedIn.get()) {
-    authInstance.signIn().then(() => {
-      msgDiv.textContent = '✅ Autenticado com sucesso!';
-      msgDiv.style.color = 'green';
-      converterPDFparaBase64();
-    }).catch(err => {
-      msgDiv.textContent = '❌ Erro ao autenticar. Veja o console.';
-      msgDiv.style.color = 'red';
-      console.error('Erro na autenticação:', err);
+  if (!isAuthenticated) {
+    gapi.load('client:auth2', () => {
+      gapi.client.init({
+        apiKey: API_KEY,
+        clientId: CLIENT_ID,
+        scope: SCOPES,
+        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+      }).then(() => {
+        const authInstance = gapi.auth2.getAuthInstance();
+        if (!authInstance.isSignedIn.get()) {
+          authInstance.signIn().then(() => {
+            isAuthenticated = true;
+            msgDiv.textContent = '✅ Autenticado com sucesso!';
+            msgDiv.style.color = 'green';
+            converterPDFparaBase64();
+          }).catch(err => {
+            msgDiv.textContent = '❌ Erro ao autenticar. Veja o console.';
+            msgDiv.style.color = 'red';
+            console.error('Erro na autenticação:', err);
+          });
+        } else {
+          isAuthenticated = true;
+          msgDiv.textContent = '✅ Já autenticado!';
+          msgDiv.style.color = 'green';
+          converterPDFparaBase64();
+        }
+      }).catch(err => {
+        msgDiv.textContent = '❌ Erro ao inicializar a API. Veja o console.';
+        msgDiv.style.color = 'red';
+        console.error('Erro na inicialização da API:', err);
+      });
     });
   } else {
-    msgDiv.textContent = '✅ Já autenticado!';
-    msgDiv.style.color = 'green';
     converterPDFparaBase64();
   }
 }
@@ -84,4 +95,30 @@ function converterPDFparaBase64() {
 }
 
 function limparBlocos() {
-  document.getElementById('blocosConta
+  document.getElementById('blocosContainer').innerHTML = '';
+  document.getElementById('mensagemEnvio').textContent = '';
+  document.getElementById('pdfInput').value = '';
+}
+
+function enviarBlocosParaSheets(blocos) {
+  const msgDiv = document.getElementById('mensagemEnvio');
+  const values = blocos.map(bloco => [bloco]);
+  const body = { values };
+
+  gapi.client.sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'A1',
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    resource: body,
+  }).then(response => {
+    const linhas = response.result.updates.updatedRows;
+    msgDiv.textContent = `✅ Enviados ${linhas} blocos para o Google Sheets!`;
+    msgDiv.style.color = 'green';
+    console.log('Resposta do Sheets:', response);
+  }).catch(err => {
+    msgDiv.textContent = '❌ Erro ao enviar para o Google Sheets. Veja o console.';
+    msgDiv.style.color = 'red';
+    console.error('Erro no envio para Sheets:', err);
+  });
+}
