@@ -16,11 +16,26 @@ function initClient() {
     scope: SCOPES,
     discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
   }).then(() => {
+    console.log('API Google Sheets inicializada');
+    document.getElementById('mensagemEnvio').textContent = 'API Google Sheets inicializada.';
     if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-      gapi.auth2.getAuthInstance().signIn();
+      gapi.auth2.getAuthInstance().signIn().then(() => {
+        console.log('Usuário autenticado');
+        document.getElementById('mensagemEnvio').textContent = 'Usuário autenticado.';
+      }).catch(err => {
+        console.error('Erro ao autenticar:', err);
+        document.getElementById('mensagemEnvio').textContent = 'Erro ao autenticar. Veja console.';
+      });
+    } else {
+      console.log('Usuário já autenticado');
+      document.getElementById('mensagemEnvio').textContent = 'Usuário já autenticado.';
     }
+  }).catch(err => {
+    console.error('Erro ao inicializar API:', err);
+    document.getElementById('mensagemEnvio').textContent = 'Erro ao inicializar API. Veja console.';
   });
 }
+
 
 // Espera carregar o gapi e inicia client
 window.onload = () => {
