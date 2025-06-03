@@ -122,3 +122,4 @@ function enviarBlocosParaSheets(blocos) {
     console.error('Erro no envio para Sheets:', err);
   });
 }
+
