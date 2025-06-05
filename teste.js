@@ -1,8 +1,9 @@
 // Configurações da API Google
-const CLIENT_ID = '734496260492-qhh17ktfpnb64mfpkancs35en04kib49.apps.googleusercontent.com';  // substitua pelo seu
-const API_KEY = 'SUA_API_KEY';                                  // substitua pelo seu
-const SCOPES = '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';
-const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/1Y7GNqRW1_iOp7rXK-xn6SqGmQOhWhSOSOdQmWlLlXtI/edit?gid=111633752#gid=111633752';                    // substitua pelo seu
+const CLIENT_ID = '734496260492-qhh17ktfpnb64mfpkancs35en04kib49.apps.googleusercontent.com';
+const API_KEY = 'A_TUA_API_KEY_REAL';  // << substitui por uma válida
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const SPREADSHEET_ID = '1Y7GNqRW1_iOp7rXK-xn6SqGmQOhWhSOSOdQmWlLlXtI';  // apenas o ID
+
 
 let isAuthenticated = false;
 
