@@ -1,28 +1,126 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>PDF → Base64 em blocos + Google Sheets</title>
+  <meta charset="UTF-8">
+  <title>PDF ↔ Base64 em Blocos</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-    textarea { width: 100%; height: 100px; margin-top: 10px; }
+    textarea { width: 100%; height: 180px; margin-top: 10px; }
     button { margin: 5px 5px 10px 0; }
     .bloco { border: 1px solid #ccc; padding: 10px; margin-top: 10px; background: #f9f9f9; }
-    #mensagemEnvio { margin-top: 10px; font-weight: bold; }
   </style>
-  <script src="https://apis.google.com/js/api.js"></script>
-  <script src="teste.js" defer></script>
 </head>
 <body>
+  <h2>🔁 PDF ↔ BIN (Base64 em blocos de 50.000)</h2>
 
-  <h2>🔁 PDF → Base64 em blocos + Google Sheets</h2>
-
-  <input type="file" id="pdfInput" accept=".pdf" /><br />
-  <button id="btnConverter">Converter e Enviar para Sheets</button>
-  <button id="btnLimpar">Limpar</button>
-
+  <h3>📤 PDF → Base64 em blocos</h3>
+  <input type="file" id="pdfInput" accept=".pdf"><br>
+  <button onclick="converterPDFparaBase64()">Converter e Dividir</button>
+  <button onclick="limparBlocos()">Limpar</button>
   <div id="blocosContainer"></div>
-  <div id="mensagemEnvio"></div>
 
+  <hr>
+
+  <h3>📥 Base64 (blocos) → PDF</h3>
+  <textarea id="entradaBase64" placeholder="Cole os blocos aqui (juntos ou separados por linha)..."></textarea>
+  <button onclick="gerarPDF()">Gerar PDF</button>
+  <button onclick="limparEntrada()">Limpar</button>
+
+  <script>
+    function converterPDFparaBase64() {
+      const file = document.getElementById('pdfInput').files[0];
+      if (!file) {
+        alert("Selecione um arquivo PDF.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        const base64 = reader.result.split(',')[1]; // Remove cabeçalho data:...
+        const blocoTam = 50000;
+        const blocos = [];
+
+        for (let i = 0; i < base64.length; i += blocoTam) {
+          blocos.push(base64.slice(i, i + blocoTam));
+        }
+
+        const container = document.getElementById('blocosContainer');
+        container.innerHTML = '';
+
+        blocos.forEach((bloco, index) => {
+          const div = document.createElement('div');
+          div.className = 'bloco';
+
+          const textAreaId = `blocoText_${index}`;
+
+          div.innerHTML = `
+            <b>Bloco ${index + 1}</b><br>
+            <textarea id="${textAreaId}" readonly>${bloco}</textarea><br>
+          `;
+
+          // Botão de Baixar
+          const btnDownload = document.createElement('button');
+          btnDownload.textContent = `Baixar bloco ${index + 1}`;
+          btnDownload.onclick = () => baixarBloco(bloco, `parte_${index + 1}.bin`);
+          div.appendChild(btnDownload);
+
+          // Botão de Copiar
+          const btnCopy = document.createElement('button');
+          btnCopy.textContent = 'Copiar';
+          btnCopy.onclick = () => {
+            const textarea = document.getElementById(textAreaId);
+            textarea.select();
+            document.execCommand('copy');
+            btnCopy.textContent = 'Copiado!';
+            setTimeout(() => { btnCopy.textContent = 'Copiar'; }, 1000);
+          };
+          div.appendChild(btnCopy);
+
+          container.appendChild(div);
+        });
+      };
+
+      // ✅ Esta linha precisa ficar **fora do onload**
+      reader.readAsDataURL(file);
+    }
+
+
+    function limparBlocos() {
+      document.getElementById('blocosContainer').innerHTML = '';
+    }
+
+    function limparEntrada() {
+      document.getElementById('entradaBase64').value = '';
+    }
+
+    function gerarPDF() {
+    const entrada = document.getElementById('entradaBase64').value;
+    const base64Unido = entrada.replace(/\s+/g, ''); // remove espaços e quebras de linha
+
+    try {
+      const byteChars = atob(base64Unido);
+      const byteArrays = [];
+
+      for (let offset = 0; offset < byteChars.length; offset += 512) {
+        const slice = byteChars.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+
+        byteArrays.push(new Uint8Array(byteNumbers));
+      }
+
+      const blob = new Blob(byteArrays, { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'recuperado.pdf';
+      link.click();
+    } catch (err) {
+      alert('Erro ao decodificar. Verifique se os blocos estão corretos.');
+    }
+  }
+  </script>
 </body>
 </html>
