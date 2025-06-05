@@ -1,7 +1,9 @@
+// Configurações da API Google
 const CLIENT_ID = '734496260492-qhh17ktfpnb64mfpkancs35en04kib49.apps.googleusercontent.com';
-const API_KEY = 'AQUI_TUA_API_KEY'; // ← TEM DE SER uma key ativa na tua conta
-const SPREADSHEET_ID = '1Y7GNqRW1_iOp7rXK-xn6SqGmQOhWhSOSOdQmWlLlXtI';
+const API_KEY = 'A_TUA_API_KEY_REAL';  // << substitui por uma válida
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const SPREADSHEET_ID = '1Y7GNqRW1_iOp7rXK-xn6SqGmQOhWhSOSOdQmWlLlXtI';  // apenas o ID
+
 
 let isAuthenticated = false;
 
