@@ -1,9 +1,8 @@
 // --- CONFIGURAÇÃO (usa estas chaves reais com cuidado!) ---
-const CLIENT_ID = '734496260492-qhh17ktfpnb64mfpkancs35en04kib49.apps.googleusercontent.com';
-const API_KEY = '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';
+const CLIENT_ID = '734435en04kib49.apps.googleusercontent.com';
+const API_KEY = 'GOCSPX-Folqx5IOd4Q';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-const SPREADSHEET_ID = '1Y7GNqRW1_iOp7rXK-xn6SqGmQOhWhSOSOdQmWlLlXtI';
-
+const SPREADSHEET_ID = '1Y7GNq'
 let isAuthenticated = false;
 
 window.onload = () => {
